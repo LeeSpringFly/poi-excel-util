@@ -4,6 +4,7 @@ import com.lee.poiexcelutil.common.annotations.ExcelColumn;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.*;
 import java.lang.reflect.Field;
@@ -34,70 +35,100 @@ public class ExcelUtil<T> {
      * @throws InstantiationException
      * @throws ParseException
      */
-    public List<T> importByExcel(InputStream inputStream, Class<T> clazz) throws IOException, IllegalAccessException, InstantiationException, ParseException, InvalidFormatException {
-        Workbook wb = WorkbookFactory.create(inputStream);
-        Sheet sheet = wb.getSheetAt(0);
+    public List<T> importExcel(InputStream inputStream, Class<T> clazz) throws IOException, IllegalAccessException, InstantiationException, ParseException, InvalidFormatException {
+//        Workbook wb = WorkbookFactory.create(inputStream);
+//        Sheet sheet = wb.getSheetAt(0);
+//
+//        List<T> result = new ArrayList<>();
+//        List<Field> fieldArray = new ArrayList<>();
+//        fieldArray.addAll(Arrays.asList(clazz.getDeclaredFields()));
+//        fieldArray.addAll(Arrays.asList(clazz.getSuperclass().getDeclaredFields()));
+//
+//        List<Field> fieldOrderList = new ArrayList<>();
+//        T t;
+//
+//        for (Row row : sheet) {
+//            if (fieldOrderList.isEmpty()) {  // 映射模型属性顺序对应 Excel 标题顺序
+//                String title;
+//                for (Cell cell : row) {
+//                    title = cell.getStringCellValue();
+//                    for (Field field : fieldArray) {
+//                        if (field.getAnnotation(ExcelColumn.class) == null)  // 如果没有标记 ExcelColumn, 跳过
+//                            continue;
+//                        if (title.toUpperCase().equals(field.getAnnotation(ExcelColumn.class).name().toUpperCase())) {
+//                            fieldOrderList.add(field);
+//                            break;
+//                        }
+//                    }
+//                }
+//            } else {  // 如果已经获取标题列表，开始获取内容
+//                if (isRowEmpty(row))  // 无效数据行跳过
+//                    continue;
+//
+//                t = clazz.newInstance();
+//                Field field;
+//                for (Cell cell : row) {  // 设置模型属性值
+//                    Cell cellTmp = row.getCell(19);
+//
+//                    field = fieldOrderList.get(cell.getColumnIndex());
+//                    field.setAccessible(true);
+//
+//                    if (field.getType() == String.class)
+//                        cell.setCellType(Cell.CELL_TYPE_STRING);
+//
+//                    Object cellVal = getCellValue(cell);
+//                    mapperExcelToModel(field, cellVal, t);
+//
+//
+//                }
+//
+//                // model 属性非空验证
+//                for (Field fieldTmp : fieldOrderList) {
+//                    fieldTmp.setAccessible(true);
+//                    if (fieldTmp.getAnnotation(ExcelColumn.class).notNull()) {
+//                        if (fieldTmp.getType() == String.class && (fieldTmp.get(t) == null || StringUtils.isEmpty(fieldTmp.get(t).toString()))) {
+//                            throw new NullPointerException(fieldTmp.getAnnotation(ExcelColumn.class).description() + "不能为空值");
+//                        }
+//
+//                        if (fieldTmp.getType() != String.class && fieldTmp.get(t) == null){
+//                            throw new NullPointerException(fieldTmp.getAnnotation(ExcelColumn.class).description() + "不能为空值");
+//                        }
+//                    }
+//                }
+//                result.add(t);
+//            }
+//        }
+//        return result;
+        return null;
+    }
 
-        List<T> result = new ArrayList<>();
+    /**
+     * 导出 Excel
+     */
+    public void exportExcel(List<T> entityList, OutputStream outputStream, String sheetName, Class<T> clazz) {
+        if (entityList == null)
+            throw new RuntimeException("导出的数据不能 null");
+
+        Workbook wb = new XSSFWorkbook();
+        Sheet sheet = wb.createSheet(sheetName);
+
         List<Field> fieldArray = new ArrayList<>();
         fieldArray.addAll(Arrays.asList(clazz.getDeclaredFields()));
         fieldArray.addAll(Arrays.asList(clazz.getSuperclass().getDeclaredFields()));
 
+        Row row = sheet.createRow(0);
+        int i = 0;
+        for (Field field : fieldArray) {
+//            row.createCell(i++) field.getAnnotation(ExcelColumn.class).name()
+        }
+
+
         List<Field> fieldOrderList = new ArrayList<>();
         T t;
 
-        for (Row row : sheet) {
-            if (fieldOrderList.isEmpty()) {  // 映射模型属性顺序对应 Excel 标题顺序
-                String title;
-                for (Cell cell : row) {
-                    title = cell.getStringCellValue();
-                    for (Field field : fieldArray) {
-                        if (field.getAnnotation(ExcelColumn.class) == null)  // 如果没有标记 ExcelColumn, 跳过
-                            continue;
-                        if (title.toUpperCase().equals(field.getAnnotation(ExcelColumn.class).name().toUpperCase())) {
-                            fieldOrderList.add(field);
-                            break;
-                        }
-                    }
-                }
-            } else {  // 如果已经获取标题列表，开始获取内容
-                if (isRowEmpty(row))  // 无效数据行跳过
-                    continue;
 
-                t = clazz.newInstance();
-                Field field;
-                for (Cell cell : row) {  // 设置模型属性值
-                    Cell cellTmp = row.getCell(19);
 
-                    field = fieldOrderList.get(cell.getColumnIndex());
-                    field.setAccessible(true);
 
-                    if (field.getType() == String.class)
-                        cell.setCellType(Cell.CELL_TYPE_STRING);
-
-                    Object cellVal = getCellValue(cell);
-                    mapperExcelToModel(field, cellVal, t);
-
-                    
-                }
-                
-                // model 属性非空验证
-                for (Field fieldTmp : fieldOrderList) {
-                    fieldTmp.setAccessible(true);
-                    if (fieldTmp.getAnnotation(ExcelColumn.class).notNull()) {
-                        if (fieldTmp.getType() == String.class && (fieldTmp.get(t) == null || StringUtils.isEmpty(fieldTmp.get(t).toString()))) {
-                            throw new NullPointerException(fieldTmp.getAnnotation(ExcelColumn.class).description() + "不能为空值");
-                        }
-
-                        if (fieldTmp.getType() != String.class && fieldTmp.get(t) == null){
-                            throw new NullPointerException(fieldTmp.getAnnotation(ExcelColumn.class).description() + "不能为空值");
-                        }
-                    }
-                }
-                result.add(t);
-            }
-        }
-        return result;
     }
 
     /**
@@ -137,10 +168,10 @@ public class ExcelUtil<T> {
      * @return
      */
     private boolean isRowEmpty(Row row) {
-        for (Cell cell : row) {
-            if (cell != null && cell.getCellType() != Cell.CELL_TYPE_BLANK)
-                return false;
-        }
+//        for (Cell cell : row) {
+//            if (cell != null && cell.getCellType() != Cell.CELL_TYPE_BLANK)
+//                return false;
+//        }
 
         return true;
     }
@@ -152,15 +183,15 @@ public class ExcelUtil<T> {
      * @return
      */
     private Object getCellValue(Cell cell) {
-        if (cell.getCellType() == Cell.CELL_TYPE_STRING)
-            return cell.getStringCellValue().trim().replace(" ", "");
-
-        if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
-            if (DateUtil.isCellDateFormatted(cell))
-                return cell.getDateCellValue();
-            else
-                return cell.getNumericCellValue();
-        }
+//        if (cell.getCellType() == Cell.CELL_TYPE_STRING)
+//            return cell.getStringCellValue().trim().replace(" ", "");
+//
+//        if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
+//            if (DateUtil.isCellDateFormatted(cell))
+//                return cell.getDateCellValue();
+//            else
+//                return cell.getNumericCellValue();
+//        }
 
         return null;
     }

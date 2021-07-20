@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
+</head>
+<body>
+<button onclick="ajaxExportExcel()">Ajax 导出 Excel</button>
+
+<form id="exportExcelForm" action="/export" method="post">
+    <button type="submit">Http 导出 Excel</button>
+</form>
+
+<script>
+    function ajaxExportExcel() {
+        axios.post('/api/export', {}, {responseType:'blob'})
+            .then(function (res) {
+                const blob = new Blob([res.data]);//处理文档流
+                const fileName = '资产列表.xlsx';
+                const elink = document.createElement('a');
+                elink.download = fileName;
+                elink.style.display = 'none';
+                elink.href = URL.createObjectURL(blob);
+                document.body.appendChild(elink);
+                elink.click();
+                URL.revokeObjectURL(elink.href); // 释放URL 对象
+                document.body.removeChild(elink);
+            });
+    }
+</script>
+</body>
+</html>
